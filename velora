@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velora Clothing - Store and Payment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        header {
+            background: black;
+            color: white;
+            padding: 15px;
+        }
+        .container {
+            padding: 20px;
+        }
+        .products {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .product {
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 200px;
+        }
+        .product img {
+            width: 100%;
+            height: auto;
+        }
+        footer {
+            background: black;
+            color: white;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .payment-options {
+            margin-top: 30px;
+        }
+        .payment-form, .cash-confirmation {
+            display: none;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Velora Clothing</h1>
+    </header>
+    
+    <div class="container">
+        <h2>Our Featured Products</h2>
+        <div class="products">
+            <div class="product">
+                <img src="shirt.jpg" alt="Velora T-Shirt">
+                <h3>Velora T-Shirt</h3>
+                <p>$10.00</p>
+                <button class="buyNow" data-product="Velora T-Shirt" data-price="10.00">Buy Now</button>
+            </div>
+            <div class="product">
+                <img src="Shorts.jpg" alt="Velora Shorts">
+                <h3>Velora Shorts</h3>
+                <p>$10.00</p>
+                <button class="buyNow" data-product="Velora Hoodie" data-price="10.00">Buy Now</button>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div id="payment-section" style="display: none;">
+            <h2>Payment for <span id="product-name"></span></h2>
+            <p>Price: $<span id="product-price"></span></p>
+
+            <div class="payment-options">
+                <h3>Select Payment Method</h3>
+                <label>
+                    <input type="radio" name="paymentMethod" value="creditCard" checked> Credit Card
+                </label>
+                <label>
+                    <input type="radio" name="paymentMethod" value="cashOnDelivery"> Cash on Delivery
+                </label>
+            </div>
+
+            <!-- Cash on Delivery Confirmation -->
+            <div class="cash-confirmation" id="cash-confirmation">
+                <h3>Cash on Delivery Selected</h3>
+                <p>Your order will be delivered to you, and you can pay in cash when it arrives.</p>
+                <button onclick="confirmOrder()">Confirm Order</button>
+            </div>
+
+            <!-- Credit Card Payment Form (Stripe) -->
+            <div class="payment-form" id="payment-form">
+                <form id="payment-form-creditcard">
+                    <div id="card-element"></div> <!-- A Stripe Element will be inserted here. -->
+                    <button type="submit">Pay Now</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Contact us at <a href="mailto:contact@velora.com">contact@velora.com</a></p>
+    </footer>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        // Store product information and display payment section
+        const buyNowButtons = document.querySelectorAll('.buyNow');
+        const paymentSection = document.getElementById('payment-section');
+        const productName = document.getElementById('product-name');
+        const productPrice = document.getElementById('product-price');
+        const paymentMethodInputs = document.querySelectorAll('input[name="paymentMethod"]');
+        const cashConfirmation = document.getElementById('cash-confirmation');
+        const creditCardForm = document.getElementById('payment-form');
+        
+        let selectedProduct = '';
+        let selectedPrice = '';
+
+        // Show payment section when a user clicks "Buy Now"
+        buyNowButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                selectedProduct = button.getAttribute('data-product');
+                selectedPrice = button.getAttribute('data-price');
+
+                // Display payment section with product details
+                productName.textContent = selectedProduct;
+                productPrice.textContent = selectedPrice;
+                paymentSection.style.display = 'block';
+            });
+        });
+
+        // Handle payment method change
+        paymentMethodInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'creditCard') {
+                    cashConfirmation.style.display = 'none';
+                    creditCardForm.style.display = 'block';
+                } else if (this.value === 'cashOnDelivery') {
+                    creditCardForm.style.display = 'none';
+                    cashConfirmation.style.display = 'block';
+                }
+            });
+        });
+
+        // Stripe Credit Card Payment (if selected)
+        if (document.querySelector('input[name="paymentMethod"]:checked').value === 'creditCard') {
+            var stripe = Stripe('YOUR_PUBLIC_KEY');  // Replace with your Stripe public key
+            var elements = stripe.elements();
+            var card = elements.create('card');
+            card.mount('#card-element');
+
+            var form = document.getElementById('payment-form-creditcard');
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                stripe.createToken(card).then(function(result) {
+                    if (result.error) {
+                        console.log(result.error.message);
+                    } else {
+                        console.log(result.token);  // Send the token to your server
+                    }
+                });
+            });
+        }
+
+        // Handle Cash on Delivery Confirmation
+        function confirmOrder() {
+            alert('Your order has been confirmed with Cash on Delivery.');
+            // Redirect to a thank you page or order summary
+        }
+    </script>
+</body>
+</html>
